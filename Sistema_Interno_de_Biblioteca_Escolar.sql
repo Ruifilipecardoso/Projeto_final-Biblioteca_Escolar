@@ -1,0 +1,74 @@
+CREATE TABLE IF NOT EXISTS "Bibliotecário" (
+	"Id_Bibliotecario" SERIAL NOT NULL,
+	"Nome" VARCHAR(55) NOT NULL,
+	"Password" VARCHAR(15) NOT NULL UNIQUE,
+	PRIMARY KEY("Id_Bibliotecario")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "Aluno" (
+	"Id_Aluno" SERIAL NOT NULL UNIQUE,
+	"Nome" VARCHAR(55) NOT NULL,
+	"Contacto" VARCHAR(15) NOT NULL,
+	"Nif" VARCHAR(9) NOT NULL UNIQUE,
+	PRIMARY KEY("Id_Aluno")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "Empréstimo" (
+	"Id_Emprestimo" SERIAL NOT NULL,
+	"Data" DATE NOT NULL,
+	"Hora" TIME NOT NULL,
+	"Estado" VARCHAR(25) NOT NULL,
+	"Id_Bibliotecario" INTEGER NOT NULL,
+	"Id_Aluno" INTEGER NOT NULL,
+	"Id_Livro" INTEGER NOT NULL,
+	"Id_Devolucao" INTEGER,
+	PRIMARY KEY("Id_Emprestimo")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "Livro" (
+	"Id_Livro" SERIAL NOT NULL,
+	"Titulo" VARCHAR(255) NOT NULL,
+	"Categoria" VARCHAR(100) NOT NULL,
+	"Autor" VARCHAR(55) NOT NULL,
+	"Estado" VARCHAR(25) NOT NULL,
+	"Stock" INTEGER NOT NULL,
+	"ISBN" VARCHAR(13) NOT NULL UNIQUE,
+	"Id_Emprestimo" INTEGER,
+	PRIMARY KEY("Id_Livro")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "Devolução" (
+	"Id_Devolucao" SERIAL NOT NULL,
+	"Data" DATE NOT NULL,
+	"Hora" TIME NOT NULL,
+	"Estado" VARCHAR(25) NOT NULL,
+	"Id_Emprestimo" INTEGER NOT NULL,
+	PRIMARY KEY("Id_Devolucao")
+);
+
+
+
+ALTER TABLE "Aluno"
+ADD FOREIGN KEY("Id_Aluno") REFERENCES "Empréstimo"("Id_Aluno")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "Bibliotecário"
+ADD FOREIGN KEY("Id_Bibliotecario") REFERENCES "Empréstimo"("Id_Bibliotecario")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "Empréstimo"
+ADD FOREIGN KEY("Id_Livro") REFERENCES "Livro"("Id_Livro")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "Empréstimo"
+ADD FOREIGN KEY("Id_Devolucao") REFERENCES "Devolução"("Id_Devolucao")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
