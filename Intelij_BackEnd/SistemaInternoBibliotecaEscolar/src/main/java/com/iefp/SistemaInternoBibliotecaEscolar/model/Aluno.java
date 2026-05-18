@@ -8,26 +8,32 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(name = "bibliotecario")
+@Table(name = "aluno")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bibliotecario {
+public class Aluno {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_bibliotecario")
-    private Integer idBibliotecario;
+    @Column(name = "id_aluno")
+    private Integer idAluno;
 
     @Column(name = "nome")
     private String nome;
 
-    @Column(name = "password")
-    private String password;
+    @Column(name = "contacto")
+    private String contacto;
+
+    @Column(name = "nif")
+    private String nif;
+
+    @Column(name = "status")
+    private String status;
 
     @Column(name = "numero_escolar")
     private String numeroEscolar;
 
-    @OneToMany(mappedBy = "bibliotecario")
+    @OneToMany(mappedBy = "aluno")
     private List<Emprestimo> emprestimos;
 }
