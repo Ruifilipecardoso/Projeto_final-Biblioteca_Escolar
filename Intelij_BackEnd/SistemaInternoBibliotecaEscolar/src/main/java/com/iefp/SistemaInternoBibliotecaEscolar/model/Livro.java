@@ -31,8 +31,11 @@ public class Livro {
     @Column(name = "disponibilidade")
     private String disponibilidade;
 
-    @Column(name = "stock")
-    private Integer stock;
+    @Column(name = "stock_atual")
+    private Integer stockAtual;
+
+    @Column(name = "stock_total")
+    private Integer stockTotal;
 
     @Column(name = "isbn")
     private String isbn;
