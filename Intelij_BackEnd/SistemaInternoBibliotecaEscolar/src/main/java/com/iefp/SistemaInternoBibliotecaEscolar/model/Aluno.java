@@ -34,6 +34,10 @@ public class Aluno {
     @Column(name = "numero_escolar")
     private String numeroEscolar;
 
+    @OneToOne
+    @JoinColumn(name = "id_utilizador")
+    private Utilizador utilizador;
+
     @OneToMany(mappedBy = "aluno")
     private List<Emprestimo> emprestimos;
 }

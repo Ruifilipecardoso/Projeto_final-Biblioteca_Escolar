@@ -22,11 +22,12 @@ public class Bibliotecario {
     @Column(name = "nome")
     private String nome;
 
-    @Column(name = "password")
-    private String password;
-
     @Column(name = "numero_escolar")
     private String numeroEscolar;
+
+    @OneToOne
+    @JoinColumn(name = "id_utilizador")
+    private Utilizador utilizador;
 
     @OneToMany(mappedBy = "bibliotecario")
     private List<Emprestimo> emprestimos;
