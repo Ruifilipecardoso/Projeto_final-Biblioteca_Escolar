@@ -49,4 +49,34 @@ public class LivroService {
             livroRepository.save(livro);
         });
     }
+
+    public void abaterLivroInutilizavel(Integer idLivro) {
+        livroRepository.findById(idLivro).ifPresent(livro -> {
+            if (livro.getStockTotal() > 0) {
+                livro.setStockTotal(livro.getStockTotal() - 1);
+
+                if (livro.getStockTotal() == 0) {
+                    livro.setDisponibilidade("Indisponível");
+                }
+                livroRepository.save(livro);
+            } else {
+                throw new RuntimeException("Erro: O stock total deste livro já é zero.");
+            }
+        });
+    }
+
+    public void abastecerStock(Integer idLivro, int quantidadeNovasCopias) {
+        if (quantidadeNovasCopias <= 0) {
+            throw new RuntimeException("A quantidade a abastecer deve ser superior a zero.");
+        }
+
+        livroRepository.findById(idLivro).ifPresent(livro -> {
+            livro.setStockAtual(livro.getStockAtual() + quantidadeNovasCopias);
+            livro.setStockTotal(livro.getStockTotal() + quantidadeNovasCopias);
+
+            livro.setDisponibilidade("Disponível");
+
+            livroRepository.save(livro);
+        });
+    }
 }

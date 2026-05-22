@@ -27,6 +27,15 @@ public class EmprestimoService {
 
     @Transactional
     public Emprestimo criarEmprestimo(Aluno aluno, Bibliotecario bibliotecario, List<Livro> livrosParaEmprestar, LocalDate dataInicio, LocalTime horaInicio, LocalDate dataFimSugeriado, LocalTime horaFimSugerido) {
+        if ("Negativo".equalsIgnoreCase(aluno.getStatus())) {
+            throw new RuntimeException("Empréstimo recusado: O aluno encontra-se com o status 'Negativo' e deve regularizar a sua situação.");
+        }
+
+        for (Livro livro : livrosParaEmprestar) {
+            if (livro.getStockAtual() <= 0) {
+                throw new RuntimeException("Empréstimo recusado: O livro '" + livro.getTitulo() + "' não tem cópias disponíveis de momento.");
+            }
+        }
         Emprestimo emprestimo = new Emprestimo();
         emprestimo.setData(dataInicio);
         emprestimo.setHora(horaInicio);

@@ -38,4 +38,25 @@ public class AlunoService {
     public void eliminar(Integer id) {
         alunoRepository.deleteById(id);
     }
+
+    public void atualizarStatus(Integer idAluno, String novoStatus) {
+        if (!"Bom".equalsIgnoreCase(novoStatus) && !"Regular".equalsIgnoreCase(novoStatus) && !"Negativo".equalsIgnoreCase(novoStatus)) {
+            throw new RuntimeException("Status inválido. Escolha entre: Bom, Regular ou Negativo.");
+        }
+
+        alunoRepository.findById(idAluno).ifPresentOrElse(aluno -> {
+            aluno.setStatus(novoStatus);
+            alunoRepository.save(aluno);
+        }, () -> {
+            throw new RuntimeException("Aluno não encontrado com o ID: " + idAluno);
+        });
+    }
+
+    public void bloquearAluno(Integer idAluno) {
+        atualizarStatus(idAluno, "Negativo");
+    }
+
+    public void regularizarAluno(Integer idAluno) {
+        atualizarStatus(idAluno, "Bom");
+    }
 }
