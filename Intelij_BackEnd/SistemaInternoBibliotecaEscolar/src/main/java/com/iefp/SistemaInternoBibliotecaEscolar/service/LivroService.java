@@ -27,6 +27,7 @@ public class LivroService {
         return livroRepository.findById(id);
     }
 
+    //Caso os livros não estejam disponíveis, aparecere a data ideal mais curta nas informações do livro
     public void diminuirStock(Integer idLivro) {
         livroRepository.findById(idLivro).ifPresent(livro -> {
             if (livro.getStockAtual() > 0) {
