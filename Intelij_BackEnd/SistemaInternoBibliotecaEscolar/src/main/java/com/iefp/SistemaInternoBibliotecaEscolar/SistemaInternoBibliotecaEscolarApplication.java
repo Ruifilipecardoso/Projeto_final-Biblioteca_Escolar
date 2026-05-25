@@ -15,7 +15,7 @@ public class SistemaInternoBibliotecaEscolarApplication {
 
 //✅Caso os livros não estejam disponíveis, aparecere a data ideal mais curta nas informações do livro
 //✅No UtilizadorService mudar a senha para nome e email
-//Aluno(1) -> Emprestimos(N) -> Livros(N)
-// 1 Aluno pode ter até 12 livros em no máximo 3 empréstimos.
-//1 Aluno com o empréstimo mais específico tem prioridade no livro.
+//✅Aluno(1) -> Emprestimos(N) -> Livros(N)
+//✅ 1 Aluno pode ter até 12 livros em no máximo 3 empréstimos.
+//✅1 Aluno com o empréstimo mais específico tem prioridade no livro.
 //Colucar a recursiva como easter egg.

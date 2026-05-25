@@ -43,9 +43,9 @@ public class UtilizadorController {
     Quando fazes no catch:javareturn ResponseEntity.badRequest().body(e.getMessage());
     Use o código com cuidado.Estás a montar uma caixa que diz: Código 400 (Erro) e lá dentro vai o texto do erro.*/
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String nome, @RequestParam String email) {
+    public ResponseEntity<?> login(@RequestParam String nome, @RequestParam String email, @RequestParam String senha) {
         try {
-            Utilizador utilizadorAutenticado = utilizadorService.autenticar(nome, email);
+            Utilizador utilizadorAutenticado = utilizadorService.autenticar(nome, email, senha);
             return ResponseEntity.ok(utilizadorAutenticado);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
