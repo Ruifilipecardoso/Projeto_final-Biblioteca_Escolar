@@ -28,16 +28,51 @@ public class EmprestimoService {
     }
 
     @Transactional
-    public Emprestimo criarEmprestimo(Aluno aluno, Bibliotecario bibliotecario,
-                                      List<Livro> livrosParaEmprestar, LocalDate dataInicio,
-                                      LocalTime horaInicio, LocalDate dataFimSugeriado, LocalTime horaFimSugerido) {
+    public Emprestimo solicitarEmprestimo(Aluno aluno, List<Livro> livrosSolicitados) {
         if ("Negativo".equalsIgnoreCase(aluno.getStatus())) {
-            throw new RuntimeException("Empréstimo recusado: O aluno encontra-se com o status 'Negativo' e deve regularizar a sua situação.");
+            throw new RuntimeException("Solicitação recusada: O teu estatuto encontra-se como 'Negativo'.");
+        }
+
+        Emprestimo solicitacao = new Emprestimo();
+        solicitacao.setAluno(aluno);
+        solicitacao.setData(LocalDate.now());
+        solicitacao.setHora(LocalTime.now());
+        solicitacao.setEstadoEmprestimo("Solicitado");
+
+        Emprestimo guardado = emprestimoRepository.save(solicitacao);
+
+        for (Livro livro : livrosSolicitados) {
+            LinhaLivros linha = new LinhaLivros();
+            linha.setEmprestimo(guardado);
+            linha.setLivro(livro);
+            linha.setQualidade("Solicitado");
+            linhaLivrosRepository.save(linha);
+        }
+
+        return guardado;
+    }
+
+
+
+    @Transactional
+    public Emprestimo aprovarSolicitacao(Integer idEmprestimo, Bibliotecario bibliotecario,
+                                         List<Livro> livrosAprovados, LocalDate dataFimSugerido,
+                                          LocalTime horaFimSugerido) {
+
+        Emprestimo emprestimo = emprestimoRepository.findById(idEmprestimo)
+                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada."));
+
+        Aluno aluno = emprestimo.getAluno();
+
+        if ("Negativo".equalsIgnoreCase(aluno.getStatus())) {
+            throw new RuntimeException("Empréstimo recusado: O aluno encontra-se com o status 'Negativo'" +
+                    " e deve regularizar a sua situação.");
         }
 
         List<Emprestimo> historicoEmprestimos = emprestimoRepository.findByAlunoIdAluno(aluno.getIdAluno());
 
-        long emprestimosAtivos = historicoEmprestimos.stream().filter(e -> !"Devolvido".equalsIgnoreCase(e.getEstadoEmprestimo())).count();
+        long emprestimosAtivos = historicoEmprestimos.stream()
+                .filter(e -> !"Devolvido".equalsIgnoreCase(e.getEstadoEmprestimo())).count();
 
         if (emprestimosAtivos >= 3) {
             throw new RuntimeException("Empréstimo recusado: O aluno já atingiu o limite máximo de 3 empréstimos ativos em aberto.");
@@ -47,16 +82,17 @@ public class EmprestimoService {
                 .filter(e -> !"Devolvido".equalsIgnoreCase(e.getEstadoEmprestimo()))
                 .flatMap(e -> e.getLinhaLivros().stream()).count();
 
-        if ((totalLivrosNaPosse + livrosParaEmprestar.size()) > 12) {
-            throw new RuntimeException("Empréstimo recusado: O limite de 12 livros em posse será excedido. O aluno tem atualmente "
-                    + totalLivrosNaPosse + " livro(s) e tenta requisitar mais " + livrosParaEmprestar.size() + ".");
+        if ((totalLivrosNaPosse + livrosAprovados.size()) > 12) {
+            throw new RuntimeException("Empréstimo recusado: O limite de 12 livros em posse será excedido." +
+                    " O aluno tem atualmente "
+                    + totalLivrosNaPosse + " livro(s) e tenta requisitar mais " + livrosAprovados.size() + ".");
         }
 
-        if (livrosParaEmprestar.size() > 4) {
+        if (livrosAprovados.size() > 4) {
             throw new RuntimeException("Empréstimo recusado: Não é permitido requisitar mais de 4 livros num único empréstimo.");
         }
 
-        for (Livro livro : livrosParaEmprestar) {
+        for (Livro livro : livrosAprovados) {
             if (livro.getStockAtual() <= 0) {
 
                 LocalDate dataMaisProxima = devolucaoIdealRepository.findAll().stream()
@@ -69,7 +105,7 @@ public class EmprestimoService {
                         + "' está esgotado. Próxima entrega prevista por outro aluno em: " + dataMaisProxima);
             }
 
-            int prioridadeDestePediido = livrosParaEmprestar.size();
+            int prioridadeDestePediido = livrosAprovados.size();
 
             long pedidosComMaiorPrioridade = emprestimoRepository.findAll().stream()
                     .filter(e -> !"Devolvido".equalsIgnoreCase(e.getEstadoEmprestimo()))
@@ -82,19 +118,22 @@ public class EmprestimoService {
                         + "' está reservada para uma solicitação com maior prioridade de especificidade (pedido com menos livros).");
             }
         }
-        Emprestimo emprestimo = new Emprestimo();
-        emprestimo.setData(dataInicio);
-        emprestimo.setHora(horaInicio);
-        emprestimo.setEstadoEmprestimo(dataInicio.isAfter(LocalDate.now()) ? "Agendado" : "Ativo");
+
+        emprestimo.setData(emprestimo.getData());
+        emprestimo.setHora(emprestimo.getHora());
+        emprestimo.setEstadoEmprestimo(emprestimo.getData().isAfter(LocalDate.now()) ? "Agendado" : "Ativo");
         emprestimo.setAluno(aluno);
         emprestimo.setBibliotecario(bibliotecario);
 
         Emprestimo emprestimoSalvo = emprestimoRepository.save(emprestimo);
 
 
+        List<LinhaLivros> linhasAntigas = linhaLivrosRepository.findByEmprestimoIdEmprestimo(idEmprestimo);
+        linhaLivrosRepository.deleteAll(linhasAntigas);
+
         int menorPrazoCalculado = 30;
 
-        for (Livro livro : livrosParaEmprestar) {
+        for (Livro livro : livrosAprovados) {
             livroService.diminuirStock(livro.getIdLivro());
 
             double livrosEmprestados = livro.getStockTotal() - livro.getStockAtual();
@@ -118,11 +157,11 @@ public class EmprestimoService {
         devolucaoIdeal.setEstadoDevolucao("Pendente");
         devolucaoIdeal.setEmprestimo(emprestimoSalvo);
 
-        if (dataFimSugeriado != null) {
-            devolucaoIdeal.setData(dataFimSugeriado);
+        if (dataFimSugerido != null) {
+            devolucaoIdeal.setData(dataFimSugerido);
             devolucaoIdeal.setHora(horaFimSugerido != null ? horaFimSugerido : LocalTime.of(18, 0));
         } else {
-            devolucaoIdeal.setData(dataInicio.plusDays(menorPrazoCalculado));
+            devolucaoIdeal.setData(emprestimoSalvo.getData().plusDays(menorPrazoCalculado));
             devolucaoIdeal.setHora(LocalTime.of(18, 0));
         }
 

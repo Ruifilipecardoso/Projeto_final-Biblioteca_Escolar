@@ -26,5 +26,7 @@ public class Utilizador {
     @Column(name = "perfil")
     private String perfil;
 
+    @Column(name = "imagem_perfil")
+    private String imagemPerfil;
 
 }

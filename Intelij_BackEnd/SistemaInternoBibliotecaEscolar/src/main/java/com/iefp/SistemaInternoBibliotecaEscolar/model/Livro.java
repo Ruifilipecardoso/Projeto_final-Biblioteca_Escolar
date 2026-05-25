@@ -15,7 +15,7 @@ import java.util.List;
 public class Livro {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //Aumentar a lergura fa foto -----------------------------------
     @Column(name = "id_livro")
     private Integer idLivro;
 
@@ -39,6 +39,18 @@ public class Livro {
 
     @Column(name = "isbn")
     private String isbn;
+
+    @Column(name = "editora")
+    private String editora;
+
+    @Column(name = "num_paginas")
+    private Integer numPaginas;
+
+    @Column(name = "ano_publicacao")
+    private Integer anoPublicacao;
+
+    @Column(name = "capa_url")
+    private String capaUrl;
 
     @OneToMany(mappedBy = "livro")
     private List<LinhaLivros> linhaLivros;
