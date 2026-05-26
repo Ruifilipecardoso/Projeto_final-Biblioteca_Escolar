@@ -59,10 +59,10 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/livros/**").hasAnyRole("ALUNO", "BIBLIOTECARIO", "ADMIN")
 
-                        .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIOS", "ADMIN")
-                        .requestMatchers("/api/emprestimos/*/aprovar").hasAnyRole("BIBLIOTECARIOS", "ADMIN")
-                        .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIOS", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/livros/*/abastecer").hasAnyRole("BIBLIOTECARIOS", "ADMIN")
+                        .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers("/api/emprestimos/*/aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/livros/*/abastecer").hasAnyRole("BIBLIOTECARIO", "ADMIN")
 
                         .requestMatchers("/api/alunos/registoAluno", "/api/bibliotecarios/registoBibliotecario").hasAnyRole("ADMIN")
                         .requestMatchers("/api/utilizadores/**").hasRole("ADMIN")
