@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <link rel="stylesheet" href="css/login.css">
+
+</head>
+<body>
+    <main>
+        <section id="informação_superior">
+            <div id="texto">
+                <h1>Acesso à Biblioteca</h1>
+            </div>
+            <div id="perfil">
+                <article id="imagem">
+
+                </article>
+            </div>
+        </section>
+        <section id="informação_inferior">
+            <form id="formulario">
+                <div class="campo_form">
+                    <label for="nome">Nome:</label>
+                    <input id="nome" type="text" required maxlength="55">
+                </div>
+                <div class="campo_form">
+                    <label for="email">Email:</label>
+                    <input id="email" type="email" required maxlength="55">
+                </div>
+                <div class="campo_form">
+                    <label for="senha">Senha:</label>
+                    <input id="senha" type="password" required minlength="8" maxlength="15" placeholder="">
+                    <span class="ajuda_campo">A senha deve ter entre 8 a 15 caracteres.</span>
+                </div>
+                <div class="campo_form">
+                    <button type="submit">Entrar</button>
+                </div>
+                
+            </form>
+        </section>
+    </main>
+</body>
+</html>
