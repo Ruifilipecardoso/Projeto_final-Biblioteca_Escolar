@@ -38,6 +38,8 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
 
+        //System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("bibliotecarioRuben123"));
+
         builder.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
 
@@ -48,12 +50,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(request -> {
+                    var config = new org.springframework.web.cors.CorsConfiguration();
+                    config.setAllowedOrigins(java.util.List.of("*"));
+                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(java.util.List.of("*"));
+                    return config;
+                }))
 
                 .csrf(csrf -> csrf.disable())
 
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/utilizadores/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/utilizadores/login").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/alunos", "/api/bibliotecarios", "/api/emprestimos/**", "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/utilizadores").permitAll()
+
 
                         .requestMatchers(HttpMethod.POST, "/api/emprestimos/solicitar").hasAnyRole("ALUNO", "ADMIN")
 

@@ -93,4 +93,11 @@ public class EmprestimoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/todos")
+    public ResponseEntity<List<Emprestimo>> listarTodosOsEmprestimos() {
+        // Retorna a lista completa direto do repositório, sem filtros!
+        List<Emprestimo> todosEmprestimos = emprestimoService.listarTodosEmprestimos();
+        return ResponseEntity.ok(todosEmprestimos);
+    }
 }

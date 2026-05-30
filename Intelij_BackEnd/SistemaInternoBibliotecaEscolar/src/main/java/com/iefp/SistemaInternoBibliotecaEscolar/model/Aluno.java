@@ -1,5 +1,6 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,5 +40,6 @@ public class Aluno {
     private Utilizador utilizador;
 
     @OneToMany(mappedBy = "aluno")
+    @JsonIgnore
     private List<Emprestimo> emprestimos;
 }

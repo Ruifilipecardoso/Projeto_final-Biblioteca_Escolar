@@ -44,7 +44,7 @@ public class UtilizadorService {
         return utilizadorRepository.findAll();
     }
 
-    public Utilizador autenticar(String email, String nome, String senha) {
+    public Utilizador autenticar(String nome, String email, String senha) {
         Utilizador utilizador = utilizadorRepository.findByEmail(email).orElseThrow(() ->
                 new RuntimeException("Autenticação falhou: Email não encontrado."));
 
