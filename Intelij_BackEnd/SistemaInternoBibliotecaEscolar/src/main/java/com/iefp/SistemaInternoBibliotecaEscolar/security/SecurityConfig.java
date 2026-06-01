@@ -38,7 +38,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
 
-        System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("bibliotecarioRuben1234"));
+        //System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("bibliotecarioRuben1234"));
 
         builder.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
