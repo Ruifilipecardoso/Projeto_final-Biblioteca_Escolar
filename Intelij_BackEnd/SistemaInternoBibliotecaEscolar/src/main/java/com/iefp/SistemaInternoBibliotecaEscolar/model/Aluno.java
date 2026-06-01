@@ -40,6 +40,5 @@ public class Aluno {
     private Utilizador utilizador;
 
     @OneToMany(mappedBy = "aluno")
-    @JsonIgnore
     private List<Emprestimo> emprestimos;
 }

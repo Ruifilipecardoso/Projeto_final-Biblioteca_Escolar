@@ -26,10 +26,15 @@
     font-family: var(--fonte-principal);
 }
 
+html {
+    min-height: 100vh;
+}
+
 body {
     font-size: 1em;
     width: 100vw;
     height: auto;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
@@ -39,6 +44,7 @@ main {
     width: 100%;
     min-height: 100%;
     height: auto;
+    min-height: 100vh;
     overflow-y: auto;
     
     padding: 10px;
@@ -157,7 +163,9 @@ section#utilizador_perfil {
 section#emprestimos {
     width: 70%;
     min-width: 650px;
-    height: 600px;
+    height: auto;
+    min-height: 20%;
+    overflow: visible;
 
     background-color: var(--cor-branco);
 
@@ -299,7 +307,7 @@ section#emprestimos {
     cursor: pointer;
     font-weight: 600;
     font-size: 0.85rem;
-    margin-right: 8px;
+    margin: 8px;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }

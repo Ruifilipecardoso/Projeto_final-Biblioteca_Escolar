@@ -1,5 +1,7 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.controller;
 
+import com.iefp.SistemaInternoBibliotecaEscolar.dto.AlunoResponse;
+import com.iefp.SistemaInternoBibliotecaEscolar.dto.UtilizadorMinimo;
 import com.iefp.SistemaInternoBibliotecaEscolar.model.Aluno;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.AlunoService;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +20,29 @@ public class AlunoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Aluno>> listarTodosAlunos() {
+    public ResponseEntity<List<AlunoResponse>> listarTodosAlunos() {
         List<Aluno> alunos = alunoService.listarTodosAlunos();
-        return ResponseEntity.ok(alunos);
+
+        List<AlunoResponse> resposta = alunos.stream().map(aluno -> {
+            UtilizadorMinimo utilizadorMinimo = null;
+
+            if (aluno.getUtilizador() != null) {
+                utilizadorMinimo = new UtilizadorMinimo(
+                        aluno.getUtilizador().getIdUtilizador(),
+                        aluno.getUtilizador().getImagemPerfil()
+                );
+            }
+
+            return new AlunoResponse(aluno.getIdAluno(),
+                    aluno.getNome(),
+                    aluno.getNumeroEscolar(),
+                    aluno.getContacto(),
+                    aluno.getNif(),
+                    aluno.getStatus(),
+                    utilizadorMinimo);
+        }).toList();
+
+        return ResponseEntity.ok(resposta);
     }
 
     /*@RequestBody: Diz ao Spring que os dados do aluno vêm dentro do "corpo" do pedido no formato JSON

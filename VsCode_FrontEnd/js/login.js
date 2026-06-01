@@ -12,7 +12,7 @@ formulario.addEventListener("submit", function(event) {
 
     const blocoSenha = campoSenha.closest(".campo_form");
 
-    if (campoSenha.value.length < 8 || campoSenha.value.length > 15) {
+    if (campoSenha.value.length < 8 || campoSenha.value.length > 30) {
         textoErro.textContent = "*Dados de acesso escritos incorretamente! Tente novamente.";
         campoAvisoBotao.classList.add("com-erro");
         return;

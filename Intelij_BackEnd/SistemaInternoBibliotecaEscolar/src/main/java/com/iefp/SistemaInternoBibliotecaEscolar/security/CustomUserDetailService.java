@@ -24,12 +24,15 @@ public class CustomUserDetailService implements UserDetailsService {
         Utilizador utilizador = utilizadorRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilizador não encontrado com o email: " + email));
 
-        String cargoComum = "ROLE_" + utilizador.getPerfil().toUpperCase();
+        String perfil = utilizador.getPerfil().toUpperCase();
+        if (!perfil.startsWith("ROLE_")) {
+            perfil = "ROLE_" + perfil;
+        }
 
         return User.builder()
                 .username(utilizador.getEmail())
                 .password(utilizador.getSenha())
-                .roles(utilizador.getPerfil().toUpperCase())
+                .authorities(perfil)
                 .build();
     }
 }

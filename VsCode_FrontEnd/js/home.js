@@ -155,86 +155,159 @@ document.addEventListener("DOMContentLoaded", async function() {
    INJEÇÃO DE CONTEÚDO NA SECÇÃO DE EMPRÉSTIMOS
    ========================================================================= */
 
-const seccaoEmprestimos = document.getElementById("emprestimos");
+    const seccaoEmprestimos = document.getElementById("emprestimos");
 
-if (seccaoEmprestimos) {
+    if (seccaoEmprestimos) {
 
-    if (perfilEnum === "ALUNO" && aluno) {
-        try {
+        if (perfilEnum === "ADMIN") {
 
-            const resposta = await fetch("http://localhost:8080/api/emprestimos/todos");
+            seccaoEmprestimos.innerHTML = `
+            <h2 class='titulo-seccao'>Sem Empréstimos</h2>`
+        }
 
-            if (resposta.ok) {
-                const todosEmprestimos = await resposta.json();
+        if (perfilEnum === "ALUNO" && aluno) {
+            try {
 
-                const meusEmprestimos = todosEmprestimos.filter(e => e.aluno && e.aluno.idAluno === aluno.idAluno);
+                const resposta = await fetch("http://localhost:8080/api/emprestimos/todos");
 
-                const solicitados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Solicitado");
+                if (resposta.ok) {
+                    const todosEmprestimos = await resposta.json();
 
-                const agendados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Agendado")
+                    const meusEmprestimos = todosEmprestimos.filter(e => e.idAluno === aluno.idAluno);
 
-                const ativos = meusEmprestimos.filter(e => e.estadoEmprestimo === "Ativo");
+                    const solicitados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Solicitado");
 
-                const finalizados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Devolvido");
+                    const agendados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Agendado")
 
-                //Html
-                const gerarTabelaAluno = (lista) => {
-                    if (lista.length === 0) return "<p class = 'sem-dados'>Sem registos nesta categoria.</p>";
+                    const ativos = meusEmprestimos.filter(e => e.estadoEmprestimo === "Ativo");
 
-                    let tabela = `
+                    const finalizados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Devolvido");
+
+                    //Html
+                    const gerarTabelaAluno = (lista) => {
+                        if (lista.length === 0) return "<p class = 'sem-dados'>Sem registos nesta categoria.</p>";
+
+                        let tabela = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Livro(s)</th>
+                                        <th>Data Pedido</th>
+                                        <th>Prazo Limite</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        lista.forEach(e => {
+                            const titulosLivros = e.linhaLivros.length > 0 ? e.linhaLivros.map(linha => linha.livro ? linha.livro.titulo : 'Sem título').join(", ") : 'Nenhum livro associado';
+
+                            const prazoLimite = e.devolucaoIdeal ? e.devolucaoIdeal.data : 'Aguardar Aprovação';
+
+                            tabela += `
+                                <tr>
+                                    <td><strong>${titulosLivros}</strong></td>
+                                    <td>${e.data || '---'}</td>
+                                    <td>${prazoLimite}</td>
+                                </tr>
+                            `;
+                        });
+
+                        return tabela + "</tbody></table>";
+                    };
+
+                    seccaoEmprestimos.innerHTML = `
+                        <h2 class='titulo-seccao'>O Meu Histórico de Empréstimos</h2>
+                        <div class='bloco-conteudo'>
+                            <h3>Solicitados (Aguardam Aprovação)</h3>
+                            ${gerarTabelaAluno(solicitados)}
+                        </div>
+                        <div class='bloco-conteudo'>
+                            <h3>Agendados (Prontos para Levantamento)</h3>
+                            ${gerarTabelaAluno(agendados)}
+                        </div>
+                        <div class='bloco-conteudo'>
+                            <h3>Empréstimos Ativos (Livros Comigo)</h3>
+                            ${gerarTabelaAluno(ativos)}
+                        </div>
+                        <div class='bloco-conteudo'>
+                            <h3>Finalizados (Devoluções Concluídas)</h3>
+                            ${gerarTabelaAluno(finalizados)}
+                        </div>
+                    `;
+                }
+            } catch (erro) {
+                console.error("Erro ao carregar empréstimos:", erro);
+                seccaoEmprestimos.innerHTML = "<p class='erro-msg'>Erro ao ligar ao servidor para carregar o histórico.</p>";
+            }
+        }
+
+        if (perfilEnum === "BIBLIOTECARIO" && bibliotecario) {
+            try {
+                const resposta = await fetch("http://localhost:8080/api/emprestimos/solicitacoes");
+
+                if (resposta.ok) {
+                    const pedidosSolicitados = await resposta.json();
+
+                    const gerarTabelaBibliotecario = (lista) => {
+                        if (lista.length === 0) return "<p class='sem-dados'>Nenhum pedido pendente nesta categoria.</p>";
+
+                        let tabela = `
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Aluno</th>
+                                    <th>Nº Escolar / Estado</th>
                                     <th>Livro(s)</th>
                                     <th>Data Pedido</th>
-                                    <th>Prazo Limite</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                    `;
-
-                    lista.forEach(e => {
-                        const titulosLivros = e.linhaLivros.length > 0 ? e.linhaLivros.map(linha => linha.livro ? linha.livro.titulo : 'Sem título').join(", ") : 'Nenhum livro associado';
-
-                        const prazoLimite = e.devolucaoIdeal ? e.devolucaoIdeal.data : 'Aguardar Aprovação';
-
-                        tabela += `
-                            <tr>
-                                <td><strong>${titulosLivros}</strong></td>
-                                <td>${e.data || '---'}</td>
-                                <td>${prazoLimite}</td>
-                            </tr>
                         `;
-                    });
 
-                    return tabela + "</tbody></table>";
-                };
+                        lista.forEach(e => {
+                            const titulosLivros = e.linhaLivros && e.linhaLivros.length > 0 
+                                ? e.linhaLivros.map(linha => linha.livro ? linha.livro.titulo : 'Sem título').join(", ") 
+                                : 'Nenhum livro associado';
 
-                seccaoEmprestimos.innerHTML = `
-                    <h2 class='titulo-seccao'>O Meu Histórico de Empréstimos</h2>
-                    <div class='bloco-conteudo'>
-                        <h3>Solicitados (Aguardam Aprovação)</h3>
-                        ${gerarTabelaAluno(solicitados)}
-                    </div>
-                    <div class='bloco-conteudo'>
-                        <h3>Agendados (Prontos para Levantamento)</h3>
-                        ${gerarTabelaAluno(agendados)}
-                    </div>
-                    <div class='bloco-conteudo'>
-                        <h3>Empréstimos Ativos (Livros Comigo)</h3>
-                        ${gerarTabelaAluno(ativos)}
-                    </div>
-                    <div class='bloco-conteudo'>
-                        <h3>Finalizados (Devoluções Concluídas)</h3>
-                        ${gerarTabelaAluno(finalizados)}
-                    </div>
-                `;
+                            // Define uma cor visual rápida com base no estado do aluno
+                            const classeStatus = e.estadoAluno === "ATIVO" ? "status-ativo" : "status-suspenso";
+
+                            tabela += `
+                                <tr>
+                                    <td><strong>${e.nomeAluno}</strong></td>
+                                    <td>
+                                        ${e.numeroEscolar} <br>
+                                        <span class="badge-status ${classeStatus}">${e.estadoAluno}</span>
+                                    </td>
+                                    <td>${titulosLivros}</td>
+                                    <td>${e.data}</td>
+                                    <td class="acoes-tabela">
+                                        <button class="btn-aprovar" onclick="tratarPedido(${e.idEmprestimo}, 'Agendado')">Aprovar</button>
+                                        <button class="btn-rejeitar" onclick="tratarPedido(${e.idEmprestimo}, 'Rejeitado')">Rejeitar</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        return tabela + "</tbody></table>";
+                    };
+
+                    // 2. Injeta a estrutura na secção correspondente do ecrã do Bibliotecário
+                    seccaoEmprestimos.innerHTML = `
+                        <h2 class='titulo-seccao'>Gestão de Pedidos Pendentes</h2>
+                        <div class='class-bloco-conteudo'>
+                            <h3>Solicitações Aguardando Análise (${pedidosSolicitados.length})</h3>
+                            ${gerarTabelaBibliotecario(pedidosSolicitados)}
+                        </div>
+                    `;
+                }
+            } catch (erro) {
+                console.error("Erro ao carregar empréstimos para o Bibliotecário:", erro);
+                seccaoEmprestimos.innerHTML = "<p class='erro-msg'>Erro ao ligar ao servidor para carregar a gestão de pedidos.</p>";
             }
-        } catch (erro) {
-            console.error("Erro ao carregar empréstimos:", erro);
-            seccaoEmprestimos.innerHTML = "<p class='erro-msg'>Erro ao ligar ao servidor para carregar o histórico.</p>";
         }
     }
-}
 
 });

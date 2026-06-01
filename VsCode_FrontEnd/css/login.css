@@ -104,7 +104,7 @@ section#informação_superior {
     border: 1px solid var(--cor-cinza-escuro);
     border-radius: 50%;
 
-    background: url(../imagens/Conta_sem_perfile.jpg) no-repeat center center scroll;
+    background: url(../imagens/perfis/Conta_sem_perfile.jpg) no-repeat center center scroll;
     background-size: cover;
 }
 

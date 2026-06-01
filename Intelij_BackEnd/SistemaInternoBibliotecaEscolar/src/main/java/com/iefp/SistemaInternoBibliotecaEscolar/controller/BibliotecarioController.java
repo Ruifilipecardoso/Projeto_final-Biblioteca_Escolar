@@ -1,5 +1,7 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.controller;
 
+import com.iefp.SistemaInternoBibliotecaEscolar.dto.BibliotecarioResponse;
+import com.iefp.SistemaInternoBibliotecaEscolar.dto.UtilizadorMinimo;
 import com.iefp.SistemaInternoBibliotecaEscolar.model.Bibliotecario;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.BibliotecarioService;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +20,27 @@ public class BibliotecarioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Bibliotecario>> listarTodosBibliotecarios() {
+    public ResponseEntity<List<BibliotecarioResponse>> listarTodosBibliotecarios() {
         List<Bibliotecario> bibliotecarios = bibliotecarioService.listarTodosBibliotecarios();
 
-        return ResponseEntity.ok(bibliotecarios);
+        List<BibliotecarioResponse> resposta = bibliotecarios.stream().map(b -> {
+            UtilizadorMinimo utilizadorMinimo = null;
+            if (b.getUtilizador() != null) {
+                utilizadorMinimo = new UtilizadorMinimo(
+                        b.getUtilizador().getIdUtilizador(),
+                        b.getUtilizador().getImagemPerfil()
+                );
+            }
+
+            return new BibliotecarioResponse(
+                    b.getIdBibliotecario(),
+                    b.getNome(),
+                    b.getNumeroEscolar(),
+                    utilizadorMinimo
+            );
+        }).toList();
+
+        return ResponseEntity.ok(resposta);
     }
 
     @PostMapping("/reguistoBibliotecario")

@@ -54,18 +54,26 @@ public class UtilizadorService {
             throw new RuntimeException("Autenticação falhou: Palavra-passe incorreta.");
         }
 
+        String perfil = utilizador.getPerfil() != null ? utilizador.getPerfil().toUpperCase() : "";
 
-        if ("Admin".equalsIgnoreCase(utilizador.getPerfil())) {
+
+        if (perfil.contains("ADMIN")) {
             return utilizador;
 
-        } else if ("Aluno".equalsIgnoreCase(utilizador.getPerfil())) {
-            alunoRepository.findAll().stream().filter(a -> a.getUtilizador().getIdUtilizador().equals(utilizador.getIdUtilizador()))
-                    .findFirst().filter(a -> a.getNome().equalsIgnoreCase(nome)).orElseThrow(() ->
-                            new RuntimeException("Autenticação falhou: Nome não corresponde ao Aluno registado."));
-        } else if ("Bibliotecario".equalsIgnoreCase(utilizador.getPerfil())) {
-            bibliotecarioRepository.findAll().stream().filter(b -> b.getUtilizador().getIdUtilizador().equals(utilizador.getIdUtilizador()))
-                    .findFirst().filter(b -> b.getNome().equalsIgnoreCase(nome)).orElseThrow(() ->
-                            new RuntimeException("Autenticação falhou: Nome não corresponde ao Bibliotecário registado."));
+        } else if (perfil.contains("ALUNO")) {
+            boolean existeAluno = alunoRepository.findAll().stream()
+                    .anyMatch(a -> a.getUtilizador() != null && a.getUtilizador().getIdUtilizador().equals(utilizador.getIdUtilizador()));
+
+            if (!existeAluno) {
+                throw new RuntimeException("Autenticação falhou: Aluno não vinculado a este utilizador.");
+            }
+        } else if (perfil.contains("BIBLIOTECARIO")) {
+            boolean existeBiblio = bibliotecarioRepository.findAll().stream()
+                    .anyMatch(b -> b.getUtilizador() != null && b.getUtilizador().getIdUtilizador().equals(utilizador.getIdUtilizador()));
+
+            if (!existeBiblio) {
+                throw new RuntimeException("Autenticação falhou: Bibliotecário não vinculado a este utilizador.");
+            }
         } else {
             throw new RuntimeException("Autenticação falhou: Perfil de utilizador desconhecido.");
         }
