@@ -1,0 +1,20 @@
+======================================================================
+     SISTEMA INTERNO DE BIBLIOTECA ESCOLAR (SIBE) - GUIA RÁPIDO
+======================================================================
+
+Siga os passos abaixo para colocar o sistema a funcionar:
+
+1. Certifique-se de que tem o PostgreSQL instalado e o servidor ativo.
+
+2. Dê um clique com o botão direito no ficheiro "application.properties" 
+   (na pasta SistemaInternoBibliotecaEscolar), escolha "Editar" e coloque 
+   a sua password do PostgreSQL em: spring.datasource.password=SUA_SENHA
+
+3. Guarde o ficheiro e feche-o.
+
+4. Dê um duplo clique no ficheiro "Iniciar_Sistema_Completo.bat" na pasta principal.
+
+5. Responda "S" na primeira execução para criar a base de dados automaticamente.
+
+6. O navegador abrirá sozinho na página de Login. Desfrute!
+======================================================================
