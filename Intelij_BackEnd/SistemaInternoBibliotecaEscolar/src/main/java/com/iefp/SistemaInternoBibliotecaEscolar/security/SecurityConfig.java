@@ -32,6 +32,12 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -43,7 +49,7 @@ public class SecurityConfig {
                 //CONFIGURAÇÃO DE CORS: Permite que o Frontend (VS Code) comunique com a API
                 .cors(cors -> cors.configurationSource(request -> {
                     org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of("http://localhost:3000", "http://localhost:5173"));
+                    config.setAllowedOriginPatterns(java.util.List.of("*"));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setAllowCredentials(true);

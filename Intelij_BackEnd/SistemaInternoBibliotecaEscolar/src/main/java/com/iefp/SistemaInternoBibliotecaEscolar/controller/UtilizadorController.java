@@ -1,20 +1,24 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.controller;
 
+import com.iefp.SistemaInternoBibliotecaEscolar.dto.LoginRequest;
 import com.iefp.SistemaInternoBibliotecaEscolar.model.Utilizador;
+import com.iefp.SistemaInternoBibliotecaEscolar.security.JwtService;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.UtilizadorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RestController //Este Controller não devolve ecrãs ou páginas HTML; devolve apenas dados puros//
 @RequestMapping("/api/utilizadores") //Esta anotação define o endereço base (a rota) para aceder a este controlador na internet.
 public class UtilizadorController {
     private final UtilizadorService utilizadorService;
+    private final JwtService jwtService;
 
-    public UtilizadorController(UtilizadorService utilizadorService) {
+    public UtilizadorController(UtilizadorService utilizadorService, JwtService jwtService) {
         this.utilizadorService = utilizadorService;
+        this.jwtService = jwtService;
     }
 
     @GetMapping //O @RequestMapping já trata da rota para esta página
@@ -43,12 +47,32 @@ public class UtilizadorController {
     Quando fazes no catch:javareturn ResponseEntity.badRequest().body(e.getMessage());
     Use o código com cuidado.Estás a montar uma caixa que diz: Código 400 (Erro) e lá dentro vai o texto do erro.*/
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String nome, @RequestParam String email, @RequestParam String senha) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginData, jakarta.servlet.http.HttpServletResponse response) {
         try {
-            Utilizador utilizadorAutenticado = utilizadorService.autenticar(nome, email, senha);
-            return ResponseEntity.ok(utilizadorAutenticado);
+            //Passa apenas o email e a senha vindos do DTO
+            Utilizador utilizador = utilizadorService.autenticar(loginData.getEmail(), loginData.getSenha());
+
+            //Gerar Token
+            String token = jwtService.gerarToken(utilizador.getEmail(), utilizador.getPerfil());
+
+            //Criar Cookie
+            jakarta.servlet.http.Cookie jwtCookie = new jakarta.servlet.http.Cookie("access_token", token);
+            jwtCookie.setHttpOnly(true); //Bloqueia a leitura por JavaScript malicioso
+            jwtCookie.setSecure(false); //Fica false para conseguirmos testar no nosso computador (HTTP)
+            jwtCookie.setPath("/"); //O cookie fica disponível para todas as páginas e rotas do sistema
+            jwtCookie.setMaxAge(86400); //Define que o login expira automaticamente em 24 horas (em segundos)
+
+            //Enviar Cookie
+            response.addCookie(jwtCookie);
+
+            //RESPOSTA LIMPA: Devolvemos um JSON apenas com dados públicos úteis para o Frontend construir o menu
+            return ResponseEntity.ok(java.util.Map.of(
+                    "email", utilizador.getEmail(),
+                    "perfil", utilizador.getPerfil(),
+                    "imagemPerfil", utilizador.getImagemPerfil() != null ? utilizador.getImagemPerfil() : ""
+            ));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(java.util.Map.of("erro", e.getMessage()));
         }
     }
 }
