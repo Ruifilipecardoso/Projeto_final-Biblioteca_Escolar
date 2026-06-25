@@ -7,6 +7,7 @@ import com.iefp.SistemaInternoBibliotecaEscolar.repository.UtilizadorRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -16,12 +17,16 @@ public class UtilizadorService {
     private final AlunoRepository alunoRepository;
     private final BibliotecarioRepository bibliotecarioRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     public UtilizadorService(UtilizadorRepository utilizadorRepository,
                              AlunoRepository alunoRepository,
-                             BibliotecarioRepository bibliotecarioRepository) {
+                             BibliotecarioRepository bibliotecarioRepository,
+                             PasswordEncoder passwordEncoder) {
         this.utilizadorRepository = utilizadorRepository;
         this.alunoRepository = alunoRepository;
         this.bibliotecarioRepository = bibliotecarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //Mudar a senha para nome e email
@@ -44,13 +49,13 @@ public class UtilizadorService {
         return utilizadorRepository.findAll();
     }
 
-    public Utilizador autenticar(String nome, String email, String senha) {
+    public Utilizador autenticar(String email, String senha) {
         Utilizador utilizador = utilizadorRepository.findByEmail(email).orElseThrow(() ->
                 new RuntimeException("Autenticação falhou: Email não encontrado."));
 
 
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if (!encoder.matches(senha, utilizador.getSenha())) {
+        //Compara a senha digitada (limpa) com a senha da BD (encriptada)
+        if (!passwordEncoder.matches(senha, utilizador.getSenha())) {
             throw new RuntimeException("Autenticação falhou: Palavra-passe incorreta.");
         }
 
