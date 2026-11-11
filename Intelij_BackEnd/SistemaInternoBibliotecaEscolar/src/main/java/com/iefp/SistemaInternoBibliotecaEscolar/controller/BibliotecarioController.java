@@ -43,7 +43,7 @@ public class BibliotecarioController {
         return ResponseEntity.ok(resposta);
     }
 
-    @PostMapping("/reguistoBibliotecario")
+    @PostMapping("/registarBibliotecario")
     public ResponseEntity<?> registarBibliotecario(@RequestBody Bibliotecario bibliotecario) {
         try {
             Bibliotecario bibliotecarioSalvo = bibliotecarioService.guardar(bibliotecario);

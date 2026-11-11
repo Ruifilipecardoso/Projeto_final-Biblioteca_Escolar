@@ -53,7 +53,7 @@ public class UtilizadorController {
             Utilizador utilizador = utilizadorService.autenticar(loginData.getEmail(), loginData.getSenha());
 
             //Gerar Token
-            String token = jwtService.gerarToken(utilizador.getEmail(), utilizador.getPerfil());
+            String token = jwtService.gerarToken( utilizador.getIdUtilizador(), utilizador.getEmail(), utilizador.getPerfil());
 
             //Criar Cookie
             jakarta.servlet.http.Cookie jwtCookie = new jakarta.servlet.http.Cookie("access_token", token);

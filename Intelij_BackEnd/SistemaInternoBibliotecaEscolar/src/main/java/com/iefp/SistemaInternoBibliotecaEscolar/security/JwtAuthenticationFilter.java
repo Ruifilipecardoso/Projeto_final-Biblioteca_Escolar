@@ -1,5 +1,6 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.security;
 
+import com.iefp.SistemaInternoBibliotecaEscolar.model.Utilizador;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -7,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -45,23 +45,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String userEmail = jwtService.extrairEmail(token);
+        try {
+            Integer idUtilizador = jwtService.extrairIdUtilizador(token);
 
-        //Se encontrou o email e o utilizador ainda não estiver autenticado nesta requisição
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailService.loadUserByUsername(userEmail);
+            if (idUtilizador != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                Utilizador utilizador = this.userDetailService.loadUserById(idUtilizador);
 
-            if (jwtService.isTokenValido(token, userDetails.getUsername())) {
-                //Cria a autorização oficial do Spring Security
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
+                if (jwtService.isTokenValido(token, utilizador.getIdUtilizador())) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            utilizador, null, utilizador.getAuthorities()
+                    );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                //Salva a autorização no contexto do sistema (O utilizador está oficialmente "logado")
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
 
         //Deixa o pedido continuar para o Controller correspondente

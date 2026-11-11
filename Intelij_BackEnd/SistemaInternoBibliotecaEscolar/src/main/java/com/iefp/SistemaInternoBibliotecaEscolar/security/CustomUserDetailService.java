@@ -3,7 +3,6 @@ package com.iefp.SistemaInternoBibliotecaEscolar.security;
 
 import com.iefp.SistemaInternoBibliotecaEscolar.model.Utilizador;
 import com.iefp.SistemaInternoBibliotecaEscolar.repository.UtilizadorRepository;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,18 +20,12 @@ public class CustomUserDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Utilizador utilizador = utilizadorRepository.findByEmail(email)
+        return utilizadorRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilizador não encontrado com o email: " + email));
+    }
 
-        String perfil = utilizador.getPerfil().toUpperCase();
-        if (!perfil.startsWith("ROLE_")) {
-            perfil = "ROLE_" + perfil;
-        }
-
-        return User.builder()
-                .username(utilizador.getEmail())
-                .password(utilizador.getSenha())
-                .authorities(perfil)
-                .build();
+    public Utilizador loadUserById(Integer idUtilizador) throws UsernameNotFoundException {
+        return utilizadorRepository.findById(idUtilizador)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilizador não encontrado com o ID: " + idUtilizador));
     }
 }

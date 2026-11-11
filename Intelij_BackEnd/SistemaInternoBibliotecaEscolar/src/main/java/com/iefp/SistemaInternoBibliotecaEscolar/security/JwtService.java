@@ -24,9 +24,10 @@ public class JwtService {
     e vai trancar tudo com a tua CHAVE_SECRETA.
     O resultado é aquela linha de texto gigante e codificada (o Token) que vai ser enviada para o navegador do utilizador.*/
     //Metodo que cria o Token JWT baseado no email e no perfil do utilizador
-    public String gerarToken(String email, String perfil) {
+    public String gerarToken(Integer idUtilizador, String email, String perfil) {
         return Jwts.builder()
-                .subject(email)
+                .subject(String.valueOf(idUtilizador))
+                .claim("email", email)
                 .claim("perfil", perfil)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TEMPO_EXPIRACAO))
@@ -34,8 +35,13 @@ public class JwtService {
                 .compact();
     }
 
+    public Integer extrairIdUtilizador (String token) {
+        String sub = extrairClaim(token, Claims::getSubject);
+        return Integer.parseInt(sub);
+    }
+
     public String extrairEmail(String token) {
-        return extrairClaim(token, Claims::getSubject);
+        return extrairClaim(token, claims -> claims.get("email", String.class));
     }
 
     //Metodo utilitário para extrair qualquer informação específica (Claim) do Token
@@ -50,9 +56,9 @@ public class JwtService {
     }
 
     //Verifica se o Token pertence ap email do utilizador e se ainda é válido
-    public boolean isTokenValido(String token, String email) {
-        final String tokenEmail = extrairEmail(token);
-        return (tokenEmail.equals(email) && !isTokenExpirado(token));
+    public boolean isTokenValido(String token, Integer idUtilizador) {
+        final Integer tokenId = extrairIdUtilizador(token);
+        return (tokenId.equals(idUtilizador) && !isTokenExpirado(token));
     }
 
     //Verifica se a data de expiração do token já passou

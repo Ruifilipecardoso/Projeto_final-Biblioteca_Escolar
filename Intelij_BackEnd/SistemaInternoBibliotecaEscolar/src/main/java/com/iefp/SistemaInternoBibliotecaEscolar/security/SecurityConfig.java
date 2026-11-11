@@ -64,18 +64,28 @@ public class SecurityConfig {
 
                 //CONTROLAR O ACESSO ÀS ROTAS (REQUEST MATCHERS)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/Utilizadores/login").permitAll()
+                        //Rotas públicas
+                        .requestMatchers("/api/Utilizadores/login", "/api/utilizadores/logout").permitAll()
 
+                        //Rota para o utilizador receber os seus dados através do Cookie JWT
+                        .requestMatchers(HttpMethod.GET, "/api/utilizadores/me").authenticated()
+
+                        //Rotas de Aluno
                         .requestMatchers(HttpMethod.POST, "/api/emprestimos/solicitar").hasAnyRole("ALUNO", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/meus").hasRole("ALUNO")
 
+                        //Consulta de livros
                         .requestMatchers(HttpMethod.GET, "/api/livros/**").hasAnyRole("ALUNO", "BIBLIOTECARIO", "ADMIN")
 
+                        //Rotas de Biblioteário
+                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/todos").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-                        .requestMatchers("/api/emprestimos//aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers("/api/emprestimos/*/aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/livros//abastecer").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/livros/*/abastecer").hasAnyRole("BIBLIOTECARIO", "ADMIN")
 
-                        .requestMatchers("/api/alunos/registoAluno", "/api/bibliotecarios/registoBibliotecario").hasAnyRole("ADMIN")
+                        //Rotas de Admin
+                        .requestMatchers("/api/alunos/registarAluno", "/api/bibliotecarios/registarBibliotecario").hasAnyRole("ADMIN")
                         .requestMatchers("/api/utilizadores/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
