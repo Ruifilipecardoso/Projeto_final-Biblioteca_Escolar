@@ -49,24 +49,28 @@ public class UtilizadorController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginData, jakarta.servlet.http.HttpServletResponse response) {
         try {
-            //Passa apenas o email e a senha vindos do DTO
+            //Autentica email e senha
             Utilizador utilizador = utilizadorService.autenticar(loginData.getEmail(), loginData.getSenha());
 
             //Gerar Token
             String token = jwtService.gerarToken( utilizador.getIdUtilizador(), utilizador.getEmail(), utilizador.getPerfil());
 
-            //Criar Cookie
-            jakarta.servlet.http.Cookie jwtCookie = new jakarta.servlet.http.Cookie("access_token", token);
-            jwtCookie.setHttpOnly(true); //Bloqueia a leitura por JavaScript malicioso
-            jwtCookie.setSecure(false); //Fica false para conseguirmos testar no nosso computador (HTTP)
-            jwtCookie.setPath("/"); //O cookie fica disponível para todas as páginas e rotas do sistema
-            jwtCookie.setMaxAge(86400); //Define que o login expira automaticamente em 24 horas (em segundos)
+            //Criar Cookie seguro (HttpOnly + SameSite=Lax)
+            org.springframework.http.ResponseCookie jwtCookie = org.springframework.http.ResponseCookie.from("accexx_token", token)
+                    .httpOnly(true)    //Bloqueia Leitura por Javascript (anti-XSS)
+                    .secure(false)      //False em LocalHost (HTTP); mudar para true em produção (HTTPS)
+                    .path("/")          //Válido em todas as lojas do site
+                    .maxAge(86400)  //Expira em 24 horas
+                    .sameSite("Lax")    //Proteção contra CSRF
+                    .build();
 
-            //Enviar Cookie
-            response.addCookie(jwtCookie);
+
+            //Envia o Cookie no cabeçalho Set-Cookie
+            response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, jwtCookie.toString());
 
             //RESPOSTA LIMPA: Devolvemos um JSON apenas com dados públicos úteis para o Frontend construir o menu
             return ResponseEntity.ok(java.util.Map.of(
+                    "idUtilizador", utilizador.getIdUtilizador(),
                     "email", utilizador.getEmail(),
                     "perfil", utilizador.getPerfil(),
                     "imagemPerfil", utilizador.getImagemPerfil() != null ? utilizador.getImagemPerfil() : ""
@@ -74,6 +78,36 @@ public class UtilizadorController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("erro", e.getMessage()));
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> obterUtilizadorAtual(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Utilizador utilizador) {
+
+        if (utilizador == null) {
+            return ResponseEntity.status(401).body(java.util.Map.of("erro", "Sessão inválida ou expirada."));
+        }
+
+        return ResponseEntity.ok(java.util.Map.of(
+                "idUtilizador", utilizador.getIdUtilizador(),
+                "email", utilizador.getEmail(),
+                "perfil", utilizador.getPerfil(),
+                "imagemPerfil", utilizador.getImagemPerfil() != null ? utilizador.getImagemPerfil() : ""
+        ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(jakarta.servlet.http.HttpServletResponse response) {
+        org.springframework.http.ResponseCookie cookieLimpo = org.springframework.http.ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookieLimpo.toString());
+        return ResponseEntity.ok(java.util.Map.of("mensagem", "Sessão terminada com sucesso."));
     }
 }
 
