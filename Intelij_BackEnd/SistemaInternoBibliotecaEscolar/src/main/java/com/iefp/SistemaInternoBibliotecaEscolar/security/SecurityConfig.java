@@ -1,20 +1,25 @@
 package com.iefp.SistemaInternoBibliotecaEscolar.security;
 
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration /*O que faz:
 Diz ao Spring Boot: "Atenção, esta classe não é uma tabela nem uma API comum. Isto é um Manual de Instruções ou um Painel de Controlo do sistema."
@@ -43,18 +48,39 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    //CONFIGURAÇÃO DE CORS: Permite que o Frontend (VS Code) comunique com a API
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/utilizadores/login", "/api/utilizadores/logout", "/error")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                //CONFIGURAÇÃO DE CORS: Permite que o Frontend (VS Code) comunique com a API
-                .cors(cors -> cors.configurationSource(request -> {
-                    org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOriginPatterns(java.util.List.of("*"));
-                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(java.util.List.of("*"));
-                    config.setAllowCredentials(true);
-                    return config;
-                }))
+
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 //DESATIVAR CSRF: Como usamos uma API REST protegida por Cookies HttpOnly e sem estado, o CSRF é desativado
                 .csrf(csrf -> csrf.disable())
@@ -64,8 +90,10 @@ public class SecurityConfig {
 
                 //CONTROLAR O ACESSO ÀS ROTAS (REQUEST MATCHERS)
                 .authorizeHttpRequests(auth -> auth
+
                         //Rotas públicas
-                        .requestMatchers("/api/Utilizadores/login", "/api/utilizadores/logout").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
 
                         //Rota para o utilizador receber os seus dados através do Cookie JWT
                         .requestMatchers(HttpMethod.GET, "/api/utilizadores/me").authenticated()
@@ -78,7 +106,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/livros/**").hasAnyRole("ALUNO", "BIBLIOTECARIO", "ADMIN")
 
                         //Rotas de Biblioteário
-                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/todos").hasAnyRole("BIBLIOTECARIO", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/todos").hasAnyRole("BIBLIOTECARIO", "ADMIN", "ALUNO"/*Temporário*/)
                         .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/emprestimos/*/aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIO", "ADMIN")
@@ -86,7 +114,7 @@ public class SecurityConfig {
 
                         //Rotas de Admin
                         .requestMatchers("/api/alunos/registarAluno", "/api/bibliotecarios/registarBibliotecario").hasAnyRole("ADMIN")
-                        .requestMatchers("/api/utilizadores/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/utilizadores").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
 
@@ -97,70 +125,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
-    /*private final UserDetailsService userDetailsService;
-
-    public SecurityConfig(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-
-        //System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("bibliotecarioRuben1234"));
-
-        builder.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-
-        return builder.build();
-    }
-
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(request -> {
-                    var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of("*"));
-                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(java.util.List.of("*"));
-                    return config;
-                }))
-
-                .csrf(csrf -> csrf.disable())
-
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST,"/api/utilizadores/login").permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/alunos", "/api/bibliotecarios", "/api/emprestimos/**", "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/utilizadores").permitAll()
-
-
-                        .requestMatchers(HttpMethod.POST, "/api/emprestimos/solicitar").hasAnyRole("ALUNO", "ADMIN")
-
-                        .requestMatchers(HttpMethod.GET, "/api/livros/**").hasAnyRole("ALUNO", "BIBLIOTECARIO", "ADMIN")
-
-                        .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-                        .requestMatchers("/api/emprestimos//aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-                        .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/livros//abastecer").hasAnyRole("BIBLIOTECARIO", "ADMIN")
-
-                        .requestMatchers("/api/alunos/registoAluno", "/api/bibliotecarios/registoBibliotecario").hasAnyRole("ADMIN")
-                        .requestMatchers("/api/utilizadores/**").hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
-                )
-
-                .httpBasic(httpBasic -> {});
-
-        return http.build();
-    }*/
 }

@@ -4,7 +4,7 @@
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-    const utilizadorLogado = JSON.parse(localStorage.getItem("utilizador"));
+    const utilizadorLogado = await window.sessaoPromise;
 
     if (!utilizadorLogado) {
         window.location.href = 'login.html';
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (perfilEnum === "ALUNO") {
         try {
 
-            const resposta = await fetch("http://localhost:8080/api/alunos")
+            const resposta = await fetch("http://localhost:8080/api/alunos", { method: "GET", credentials: "include"});
 
             if (resposta.ok) {
                 const alunos = await resposta.json();
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     } else if (perfilEnum === "BIBLIOTECARIO") {
         try {
 
-            const resposta = await fetch("http://localhost:8080/api/bibliotecarios")
+            const resposta = await fetch("http://localhost:8080/api/bibliotecarios", {method: "GET", credentials: "include"});
 
             if (resposta.ok) {
                 const bibliotecarios = await resposta.json();
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (perfilEnum === "ALUNO" && aluno) {
             try {
 
-                const resposta = await fetch("http://localhost:8080/api/emprestimos/todos");
+                const resposta = await fetch("http://localhost:8080/api/emprestimos/todos", {method: "GET", credentials: "include"});
 
                 if (resposta.ok) {
                     const todosEmprestimos = await resposta.json();
@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         if (perfilEnum === "BIBLIOTECARIO" && bibliotecario) {
             try {
-                const resposta = await fetch("http://localhost:8080/api/emprestimos/solicitacoes");
+                const resposta = await fetch("http://localhost:8080/api/emprestimos/solicitacoes", {method: "GET", credentials: "include"});
 
                 if (resposta.ok) {
                     const pedidosSolicitados = await resposta.json();

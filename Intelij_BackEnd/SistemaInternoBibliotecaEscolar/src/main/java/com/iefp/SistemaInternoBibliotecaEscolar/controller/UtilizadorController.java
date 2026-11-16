@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(originPatterns = "*", allowCredentials = "true")
+
 @RestController //Este Controller não devolve ecrãs ou páginas HTML; devolve apenas dados puros//
 @RequestMapping("/api/utilizadores") //Esta anotação define o endereço base (a rota) para aceder a este controlador na internet.
 public class UtilizadorController {
@@ -56,7 +56,7 @@ public class UtilizadorController {
             String token = jwtService.gerarToken( utilizador.getIdUtilizador(), utilizador.getEmail(), utilizador.getPerfil());
 
             //Criar Cookie seguro (HttpOnly + SameSite=Lax)
-            org.springframework.http.ResponseCookie jwtCookie = org.springframework.http.ResponseCookie.from("accexx_token", token)
+            org.springframework.http.ResponseCookie jwtCookie = org.springframework.http.ResponseCookie.from("access_token", token)
                     .httpOnly(true)    //Bloqueia Leitura por Javascript (anti-XSS)
                     .secure(false)      //False em LocalHost (HTTP); mudar para true em produção (HTTPS)
                     .path("/")          //Válido em todas as lojas do site

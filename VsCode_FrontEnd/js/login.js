@@ -10,47 +10,51 @@ const textoErro = document.getElementById("mensagem_erro");
 formulario.addEventListener("submit", function(event) {
     event.preventDefault();
 
-    const blocoSenha = campoSenha.closest(".campo_form");
-
     if (campoSenha.value.length < 8 || campoSenha.value.length > 30) {
         textoErro.textContent = "*Dados de acesso escritos incorretamente! Tente novamente.";
         campoAvisoBotao.classList.add("com-erro");
         return;
     }
 
-    blocoSenha.classList.remove("com-erro");
-    document.getElementById("mensagem_erro").textContent = "";
+    campoAvisoBotao.classList.remove("com-erro");
+    textoErro.textContent = "";
 
-    efetuarLogin(document.getElementById("nome").value, document.getElementById("email").value, campoSenha.value);
+    const email = document.getElementById("email").value.trim();
+    const senha = campoSenha.value;
 
-})
+    efetuarLogin(email, senha);
+
+});
 
 
 
 /* =========================================================================
-   LIGAÇÃO À API DO BACKEND (Pedidos HTTP / Fetch)
+   LIGAÇÃO À API DO BACKEND (Pedidos HTTP / Fetch com Cookie HttpOnly)
    ========================================================================= */
 
-async function efetuarLogin(nome, email, senha) {
+async function efetuarLogin(email, senha) {
     const API_URL = "http://localhost:8080";
-    const blocoSenha = document.getElementById("senha").closest(".campo_form");
 
     try {
-        const parametros = new URLSearchParams({nome, email, senha});
+        const resposta = await fetch(`${API_URL}/api/utilizadores/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({email, senha})
+        });
 
-        const resposta = await fetch(`${API_URL}/api/utilizadores/login?${parametros}`, {method: 'POST'});
+        const textoResposta = await resposta.text();
+        const dados = textoResposta ? JSON.parse(textoResposta) : {};
 
         if (!resposta.ok) {
-            textoErro.textContent = "*Dados de acesso incorretos! Tente novamente.";
+            textoErro.textContent = dados.erro || `Erro ${resposta.status}: Acesso negado ou dados incorretos.`;
 
             campoAvisoBotao.classList.add("com-erro");
 
             return;
         }
-
-        const utilizadorLogado = await resposta.json();
-
-        localStorage.setItem("utilizador", JSON.stringify(utilizadorLogado));
 
         alert("Login efetuado com sucesso!");
 
