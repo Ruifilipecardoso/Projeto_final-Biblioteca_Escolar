@@ -168,12 +168,11 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (perfilEnum === "ALUNO" && aluno) {
             try {
 
-                const resposta = await fetch("http://localhost:8080/api/emprestimos/todos", {method: "GET", credentials: "include"});
+                const resposta = await fetch("http://localhost:8080/api/emprestimos/meus", {method: "GET", credentials: "include"});
 
                 if (resposta.ok) {
-                    const todosEmprestimos = await resposta.json();
 
-                    const meusEmprestimos = todosEmprestimos.filter(e => e.idAluno === aluno.idAluno);
+                    const meusEmprestimos = await resposta.json();
 
                     const solicitados = meusEmprestimos.filter(e => e.estadoEmprestimo === "Solicitado");
 

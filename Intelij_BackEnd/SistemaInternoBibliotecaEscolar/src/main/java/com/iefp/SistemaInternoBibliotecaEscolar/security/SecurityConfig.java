@@ -106,7 +106,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/livros/**").hasAnyRole("ALUNO", "BIBLIOTECARIO", "ADMIN")
 
                         //Rotas de Biblioteário
-                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/todos").hasAnyRole("BIBLIOTECARIO", "ADMIN", "ALUNO"/*Temporário*/)
+                        .requestMatchers(HttpMethod.GET, "/api/emprestimos/todos").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/emprestimos/solicitacoes").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/emprestimos/*/aprovar").hasAnyRole("BIBLIOTECARIO", "ADMIN")
                         .requestMatchers("/api/devolucoes/**").hasAnyRole("BIBLIOTECARIO", "ADMIN")

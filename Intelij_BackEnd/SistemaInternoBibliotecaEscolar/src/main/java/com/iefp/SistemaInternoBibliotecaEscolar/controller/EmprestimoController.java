@@ -2,17 +2,17 @@ package com.iefp.SistemaInternoBibliotecaEscolar.controller;
 
 
 import com.iefp.SistemaInternoBibliotecaEscolar.dto.*;
-import com.iefp.SistemaInternoBibliotecaEscolar.model.Aluno;
-import com.iefp.SistemaInternoBibliotecaEscolar.model.Bibliotecario;
-import com.iefp.SistemaInternoBibliotecaEscolar.model.Emprestimo;
-import com.iefp.SistemaInternoBibliotecaEscolar.model.Livro;
+import com.iefp.SistemaInternoBibliotecaEscolar.model.*;
+import com.iefp.SistemaInternoBibliotecaEscolar.repository.AlunoRepository;
 import com.iefp.SistemaInternoBibliotecaEscolar.repository.EmprestimoRepository;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.AlunoService;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.BibliotecarioService;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.EmprestimoService;
 import com.iefp.SistemaInternoBibliotecaEscolar.service.LivroService;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -29,24 +29,27 @@ public class EmprestimoController {
     private final BibliotecarioService bibliotecarioService;
     private final LivroService livroService;
     private final EmprestimoRepository emprestimoRepository;
+    private final AlunoRepository alunoRepository;
 
     public EmprestimoController(EmprestimoService emprestimoService,
                                 AlunoService alunoService,
                                 BibliotecarioService bibliotecarioService,
                                 LivroService livroService,
-                                EmprestimoRepository emprestimoRepository) {
+                                EmprestimoRepository emprestimoRepository, AlunoRepository alunoRepository) {
         this.emprestimoService = emprestimoService;
         this.alunoService = alunoService;
         this.bibliotecarioService = bibliotecarioService;
         this.livroService = livroService;
         this.emprestimoRepository = emprestimoRepository;
+        this.alunoRepository = alunoRepository;
     }
 
     @PostMapping("/solicitar")
-    public ResponseEntity<?> solicitarEmprestimo(@RequestBody EmprestimoRequest request) {
+    public ResponseEntity<?> solicitarEmprestimo(@RequestBody EmprestimoRequest request, @AuthenticationPrincipal Utilizador utlizadorLogado) {
         try {
-            Aluno aluno = alunoService.buscarPorId(request.getIdAluno())
-                    .orElseThrow(() -> new RuntimeException("Erro: Aluno não encontrado no sistema."));
+
+            Aluno aluno = alunoRepository.findByUtilizadorIdUtilizador(utlizadorLogado.getIdUtilizador())
+                    .orElseThrow(() -> new RuntimeException("Perfil de aluno não encontrado para o utilizador autenticado."));
 
             List<Livro> livrosSolicitados = new ArrayList<>();
             for (Integer id : request.getIdLivros()) {
@@ -124,46 +127,63 @@ public class EmprestimoController {
        List<Emprestimo> todosEmprestimos = emprestimoService.listarTodosEmprestimos();
 
        List<EmprestimoResponse> reposta = todosEmprestimos.stream().map(emp -> {
-           List<LinhaLivroMinimo> livros = emp.getLinhaLivros().stream()
-                   .map(linha -> new LinhaLivroMinimo(
-                        new LivroMinimo(linha.getLivro().getTitulo())
-                   )).toList();
-
-           String estado = emp.getEstadoEmprestimo() != null ? emp.getEstadoEmprestimo().toUpperCase() : "";
-           DevolucaoIdealMinimo devolucaoIdeal = null;
-
-           if (estado.equals("SOLICITADO")) {
-               if (emp.getDevolucaoIdeal() != null) {
-                   devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
-               }
-           } else if (estado.equals("AGENDADO") || estado.equals("ATIVO")) {
-               if (emp.getDevolucaoIdeal() != null) {
-                   devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
-               } else {
-                   devolucaoIdeal = new DevolucaoIdealMinimo(emp.getData().plusDays(14));
-               }
-           } else if (estado.equals("DEVOLVIDO")) {
-               if (emp.getDevolucaoReal() != null) {
-                   devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoReal().getData());
-               } else if (emp.getDevolucaoIdeal() != null) {
-                   devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
-               }
-           }
-
-           return new EmprestimoResponse(emp.getIdEmprestimo(),
-                   emp.getAluno().getIdAluno(),
-                   emp.getData(),
-                   emp.getEstadoEmprestimo(),
-                   livros,
-                   devolucaoIdeal,
-                   emp.getAluno().getNome(),
-                   emp.getAluno().getNumeroEscolar(),
-                   emp.getAluno().getStatus()
-           );
+           return converterParaDTO(emp);
 
 
        }).toList();
 
        return ResponseEntity.ok(reposta);
+    }
+
+    private @NonNull EmprestimoResponse converterParaDTO(Emprestimo emp) {
+        List<LinhaLivroMinimo> livros = emp.getLinhaLivros().stream()
+                .map(linha -> new LinhaLivroMinimo(
+                     new LivroMinimo(linha.getLivro().getTitulo())
+                )).toList();
+
+        String estado = emp.getEstadoEmprestimo() != null ? emp.getEstadoEmprestimo().toUpperCase() : "";
+        DevolucaoIdealMinimo devolucaoIdeal = null;
+
+        if (estado.equals("SOLICITADO")) {
+            if (emp.getDevolucaoIdeal() != null) {
+                devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
+            }
+        } else if (estado.equals("AGENDADO") || estado.equals("ATIVO")) {
+            if (emp.getDevolucaoIdeal() != null) {
+                devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
+            } else {
+                devolucaoIdeal = new DevolucaoIdealMinimo(emp.getData().plusDays(14));
+            }
+        } else if (estado.equals("DEVOLVIDO")) {
+            if (emp.getDevolucaoReal() != null) {
+                devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoReal().getData());
+            } else if (emp.getDevolucaoIdeal() != null) {
+                devolucaoIdeal = new DevolucaoIdealMinimo(emp.getDevolucaoIdeal().getData());
+            }
+        }
+
+        return new EmprestimoResponse(emp.getIdEmprestimo(),
+                emp.getAluno().getIdAluno(),
+                emp.getData(),
+                emp.getEstadoEmprestimo(),
+                livros,
+                devolucaoIdeal,
+                emp.getAluno().getNome(),
+                emp.getAluno().getNumeroEscolar(),
+                emp.getAluno().getStatus()
+        );
+    }
+
+    @GetMapping("/meus")
+    public ResponseEntity<List<EmprestimoResponse>> listarMeusEmprestimos(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal Utilizador utilizadorLogado) {
+
+        List<Emprestimo> meusEmprestimos = emprestimoService.listarEmprestimosPorUtilizador(utilizadorLogado.getIdUtilizador());
+
+        List<EmprestimoResponse> resposta = meusEmprestimos.stream()
+                .map(this::converterParaDTO)
+                .toList();
+
+        return ResponseEntity.ok(resposta);
     }
 }

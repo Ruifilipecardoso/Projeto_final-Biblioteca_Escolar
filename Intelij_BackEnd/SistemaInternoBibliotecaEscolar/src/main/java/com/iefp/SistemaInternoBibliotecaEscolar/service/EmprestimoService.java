@@ -174,6 +174,10 @@ public class EmprestimoService {
         return emprestimoRepository.findAll();
     }
 
+    public List<Emprestimo> listarEmprestimosPorUtilizador(Integer idUtilizador) {
+        return emprestimoRepository.findByAlunoUtilizadorIdUtilizador(idUtilizador);
+    }
+
     private int calcularPrazoDinamico(int stockAtual, int popularidade) {
         int prazoBase = 7;
 

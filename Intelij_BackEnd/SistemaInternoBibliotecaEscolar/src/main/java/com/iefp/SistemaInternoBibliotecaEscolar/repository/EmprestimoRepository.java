@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface EmprestimoRepository extends JpaRepository<Emprestimo, Integer> {
     List<Emprestimo> findByAlunoIdAluno(Integer idAluno);
+    List<Emprestimo> findByAlunoUtilizadorIdUtilizador(Integer idUtilizador);
 }
