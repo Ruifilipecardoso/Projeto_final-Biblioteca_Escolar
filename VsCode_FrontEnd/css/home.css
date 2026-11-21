@@ -40,6 +40,64 @@ body {
     overflow-x: hidden;
 }
 
+#sombra_header {
+    position: relative;
+    z-index: 10;
+    margin-bottom: -48px;
+    /*box-shadow: 0px 20px 10px 0px rgba(0, 0, 0, 0.2);*/
+    filter: drop-shadow(0px 20px 10px rgba(0, 0, 0, 0.3));
+}
+
+header {
+    box-sizing: border-box;
+    
+    height: 148px;
+    
+    padding-bottom: 48px;
+    
+    /*Tentativa de borda*/
+    /*border-style: solid;
+    border-color: transparent;
+    border-width: 0px 0px 16px 0px;
+    border-image: url(../imagens/Bordas/Papel_Rasgado.png) 0 0 50 0 repeat;*/
+
+    /*Imagem de fundo do header*/
+    background: url(../imagens/Fundos/Folha_Caderno.jpg) repeat-x center right;
+    background-size: clamp(1356px, 100vw, 4062px) 772px;
+
+    /*Máscara de Recorte*/
+    -webkit-mask-image: linear-gradient(#000, #000), url(../imagens/Bordas/Papel_Rasgado.png);
+    mask-image: linear-gradient(#000, #000), url(../imagens/Bordas/Papel_Rasgado.png);
+
+    -webkit-mask-size: 100% calc(100% - 48px), auto 48px;
+    mask-size: 100% calc(100% - 48px), auto 48px;
+
+    -webkit-mask-position: top left, bottom left;
+    mask-position: top right, bottom right;
+    
+    -webkit-mask-repeat: no-repeat, round no-repeat;
+    mask-repeat: no-repeat, round no-repeat;
+    
+}
+
+/*Tentativa de "rasgo de papel" bem sucedida, mas rejeitada*/
+/*header::after {
+    content: "";
+    position: absolute;
+    
+    left: 0%;
+    top: 100%;
+
+    width: 100%;
+    height: 48px;
+
+    background-image: url(../imagens/Bordas/Papel_Rasgado.png);
+    background-repeat: round no-repeat;
+    background-size: auto 48px;
+
+    pointer-events: none;
+}*/
+
 main {
     width: 100%;
     min-height: 100%;
@@ -48,6 +106,7 @@ main {
     overflow-y: auto;
     
     padding: 10px;
+    padding-top: 50px;
 
     background-color: color-mix(in srgb, var(--cor-fundo-claríssimo) 20%, transparent);
 
